@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<model name="" userDefinedModelVersionIdentifier="" type="com.apple.IDECoreDataModeler.DataModel" documentVersion="1.0" lastSavedToolsVersion="2061" systemVersion="13D65" minimumToolsVersion="Xcode 4.3" macOSVersion="Automatic" iOSVersion="Automatic">
+    <entity name="Hashtag" representedClassName="Hashtag" syncable="YES">
+        <attribute name="text" optional="YES" attributeType="String" syncable="YES"/>
+        <attribute name="tweetsCount" optional="YES" attributeType="Integer 32" defaultValueString="0" syncable="YES"/>
+        <relationship name="allTweets" optional="YES" toMany="YES" deletionRule="Nullify" destinationEntity="Tweet" inverseName="allHashtags" inverseEntity="Tweet" syncable="YES"/>
+    </entity>
+    <entity name="Media" representedClassName="Media" syncable="YES">
+        <attribute name="id" optional="YES" attributeType="String" syncable="YES"/>
+        <attribute name="largeImageURL" optional="YES" attributeType="String" syncable="YES"/>
+        <attribute name="thumbnail" optional="YES" attributeType="Binary" syncable="YES"/>
+        <attribute name="thumbnailURL" optional="YES" attributeType="String" syncable="YES"/>
+        <relationship name="allTweets" optional="YES" toMany="YES" deletionRule="Nullify" destinationEntity="Tweet" inverseName="allMedia" inverseEntity="Tweet" syncable="YES"/>
+    </entity>
+    <entity name="Tweet" representedClassName="Tweet" syncable="YES">
+        <attribute name="id" optional="YES" attributeType="String" syncable="YES"/>
+        <attribute name="source" optional="YES" attributeType="String" syncable="YES"/>
+        <attribute name="text" optional="YES" attributeType="String" syncable="YES"/>
+        <relationship name="allHashtags" optional="YES" toMany="YES" deletionRule="Nullify" destinationEntity="Hashtag" inverseName="allTweets" inverseEntity="Hashtag" syncable="YES"/>
+        <relationship name="allMedia" optional="YES" toMany="YES" deletionRule="Nullify" destinationEntity="Media" inverseName="allTweets" inverseEntity="Media" syncable="YES"/>
+        <relationship name="myUser" optional="YES" minCount="1" maxCount="1" deletionRule="Nullify" destinationEntity="User" inverseName="allTweets" inverseEntity="User" syncable="YES"/>
+    </entity>
+    <entity name="User" representedClassName="User" syncable="YES">
+        <attribute name="backgroundImageURL" optional="YES" attributeType="String" syncable="YES"/>
+        <attribute name="bannerImageURL" optional="YES" attributeType="String" syncable="YES"/>
+        <attribute name="desc" optional="YES" attributeType="String" syncable="YES"/>
+        <attribute name="id" optional="YES" attributeType="String" syncable="YES"/>
+        <attribute name="location" optional="YES" attributeType="String" syncable="YES"/>
+        <attribute name="name" optional="YES" attributeType="String" syncable="YES"/>
+        <attribute name="profileImageURL" optional="YES" attributeType="String" syncable="YES"/>
+        <attribute name="screenName" optional="YES" attributeType="String" syncable="YES"/>
+        <relationship name="allTweets" optional="YES" toMany="YES" deletionRule="Cascade" destinationEntity="Tweet" inverseName="myUser" inverseEntity="Tweet" syncable="YES"/>
+    </entity>
+    <elements>
+        <element name="Hashtag" positionX="-36" positionY="117" width="128" height="90"/>
+        <element name="Media" positionX="484" positionY="44" width="128" height="118"/>
+        <element name="Tweet" positionX="286" positionY="171" width="128" height="133"/>
+        <element name="User" positionX="-38" positionY="314" width="128" height="180"/>
+    </elements>
+</model>
