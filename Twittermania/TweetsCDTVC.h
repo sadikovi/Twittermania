@@ -12,8 +12,6 @@
 
 @interface TweetsCDTVC : CoreDataTableViewController
 
-@property (nonatomic, strong) NSManagedObjectContext *managedObjectContext;
-
 - (void)prepareTweetsForHashtag:(Hashtag *)hashtag;
 
 @end

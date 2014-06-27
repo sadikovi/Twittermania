@@ -13,7 +13,6 @@
 #import "Tweet+Twitter.h"
 
 #define TWITTER_UPDATE_INTERVAL             10*60
-#define TWITTER_BACKGROUND_FETCH_TIMEOUT    20
 
 @interface TwittermaniaAppDelegate()
 @property (nonatomic, strong) NSManagedObjectContext *databaseContext;

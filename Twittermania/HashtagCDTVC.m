@@ -21,9 +21,10 @@
     NSFetchRequest *request = [NSFetchRequest fetchRequestWithEntityName:@"Hashtag"];
     
     request.predicate = nil;
-    request.sortDescriptors = @[ [NSSortDescriptor sortDescriptorWithKey:@"tweetsCount"
+    
+    request.sortDescriptors = @[ [NSSortDescriptor sortDescriptorWithKey:@"text"
                                                               ascending:NO
-                                                               selector:@selector(compare:)] ];
+                                                               selector:@selector(localizedStandardCompare:)] ];
     self.fetchedResultsController = [[NSFetchedResultsController alloc] initWithFetchRequest:request
                                                                         managedObjectContext:managedObjectContext
                                                                           sectionNameKeyPath:nil

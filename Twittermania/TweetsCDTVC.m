@@ -13,9 +13,11 @@
 #import "Hashtag.h"
 #import "TwitterDatabaseAvailability.h"
 
+@interface TweetsCDTVC()
+@property (nonatomic, strong) NSManagedObjectContext *managedObjectContext;
+@end
+
 @implementation TweetsCDTVC
-
-
 /*
 - (void)setManagedObjectContext:(NSManagedObjectContext *)managedObjectContext {
     _managedObjectContext = managedObjectContext;
@@ -68,7 +70,7 @@
     cell.detailTextLabel.text = tweet.source;
     cell.detailTextLabel.font = [UIFont systemFontOfSize:12];
     
-    if ([tweet.allMedia count] > 0) {
+    if ([tweet.allMedia count]) {
         cell.imageView.image = [UIImage imageNamed:@"default_icon"];
         
         dispatch_queue_t thumbQueue = dispatch_queue_create("Thumbnail_fetch_queue", NULL);

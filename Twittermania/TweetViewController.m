@@ -12,14 +12,15 @@
 #import "Media.h"
 #import <QuartzCore/QuartzCore.h>
 
+#define TABLE_VIEW_ROWS     4
+#define TABLE_VIEW_SECTIONS 1
+
 @interface TweetViewController () <UICollectionViewDataSource, UICollectionViewDelegate, UICollectionViewDelegateFlowLayout>
-@property (weak, nonatomic) IBOutlet UIImageView *backgroundImageView;
-@property (weak, nonatomic) IBOutlet UIImageView *profileImageView;
-@property (weak, nonatomic) IBOutlet UILabel *userName;
+@property (strong, nonatomic) UIImageView *backgroundImageView;
+@property (strong, nonatomic) UIImageView *profileImageView;
+@property (strong, nonatomic) UILabel *usernameLabel;
 @property (weak, nonatomic) IBOutlet UITableView *tableView;
 @property (strong, nonatomic) UICollectionView *collectionView;
-@property (weak, nonatomic) IBOutlet UIActivityIndicatorView *backgroundSpinner;
-@property (weak, nonatomic) IBOutlet UIActivityIndicatorView *profileSpinner;
 
 @property (nonatomic, strong) NSString *username;
 @property (nonatomic, strong) NSURL *profileImageURL;
@@ -38,56 +39,78 @@
     [self.tableView reloadData];
 }
 
-- (void)viewDidLoad {
-    [super viewDidLoad];
+- (UIImageView *)profileImageView {
+    if (!_profileImageView) {
+        _profileImageView = [[UIImageView alloc] initWithFrame:CGRectZero];
+        self.profileImageView.image = nil;
+        self.profileImageView.layer.borderColor = [UIColor whiteColor].CGColor;
+        self.profileImageView.layer.borderWidth = 1;
+        self.profileImageView.layer.cornerRadius = self.profileImageView.frame.size.width/2;
+        self.profileImageView.clipsToBounds = YES;
+    }
     
-    self.userName.text = self.username;
-    self.profileImageView.image = nil;
-    self.profileImageView.layer.borderColor = [UIColor whiteColor].CGColor;
-    self.profileImageView.layer.borderWidth = 1;
-    self.backgroundImageView.image = nil;
+    return _profileImageView;
+}
+
+- (UIImageView *)backgroundImageView {
+    if (!_backgroundImageView) {
+        _backgroundImageView = [[UIImageView alloc] initWithFrame:CGRectZero];
+        _backgroundImageView.contentMode = UIViewContentModeCenter;
+    }
+    //_backgroundImageView.clipsToBounds = YES;
     
+    return _backgroundImageView;
+}
+
+// download method for imageView
+- (void)downloadImageForView:(UIImageView *)imageView withURL:(NSURL *)url {
+    imageView.image = nil;
     // download profile image
-    [self.profileSpinner startAnimating];
-    dispatch_queue_t tweetProfileImagesQueue = dispatch_queue_create("Tweet_profile_images_fetch_queue", NULL);
-    dispatch_async(tweetProfileImagesQueue, ^{
-        UIImage *profileImage = [UIImage imageWithData:[NSData dataWithContentsOfURL:self.profileImageURL]];
+    dispatch_queue_t backgroundDownloadQueue = dispatch_queue_create("background_download_queue", NULL);
+    dispatch_async(backgroundDownloadQueue, ^{
+        UIImage *image = [UIImage imageWithData:[NSData dataWithContentsOfURL:url]];
         dispatch_async(dispatch_get_main_queue(), ^{
-            self.profileImageView.image = profileImage;
-            [self.profileSpinner stopAnimating];
+            imageView.image = image;
         });
     });
+}
+
+- (UILabel *)usernameLabel {
+    if (!_usernameLabel) {
+        _usernameLabel = [[UILabel alloc] initWithFrame:CGRectZero];
+        if (self.username) _usernameLabel.text = self.username;
+        self.usernameLabel.backgroundColor = [UIColor clearColor];
+        self.usernameLabel.textAlignment = NSTextAlignmentCenter;
+    }
     
-    // download background image
-    [self.backgroundSpinner startAnimating];
-    dispatch_queue_t tweetBackgroundImagesQueue = dispatch_queue_create("Tweet_background_images_fetch_queue", NULL);
-    dispatch_async(tweetBackgroundImagesQueue, ^{
-        UIImage *backgroundImage = [UIImage imageWithData:[NSData dataWithContentsOfURL:self.backgroundImageURL]];
-        dispatch_async(dispatch_get_main_queue(), ^{
-            self.backgroundImageView.image = backgroundImage;
-            [self.backgroundSpinner stopAnimating];
-        });
-    });
-    
+    return _usernameLabel;
+}
+
+- (void)didRotateFromInterfaceOrientation:(UIInterfaceOrientation)fromInterfaceOrientation {
     [self.tableView reloadData];
 }
 
 #pragma mark - UITableViewDataSource
 
 - (NSInteger)numberOfSectionsInTableView:(UITableView *)tableView {
-    return 1;
+    return TABLE_VIEW_SECTIONS;
 }
 
 - (NSInteger)tableView:(UITableView *)tableView numberOfRowsInSection:(NSInteger)section {
-    if (![self.tweet.allMedia count]) {
-        return 1;
-    }
+    if (![self.tweet.allMedia count]) return TABLE_VIEW_ROWS - 1;
     
-    return 2;
+    return TABLE_VIEW_ROWS;
 }
 
 - (CGFloat)tableView:(UITableView *)tableView heightForRowAtIndexPath:(NSIndexPath *)indexPath {
     if (indexPath.row == 0) {
+        return 120;
+    }
+    if (indexPath.row == 1) {
+        return 50;
+    }
+    
+    if (indexPath.row == 2) {
         CGSize maximumSize = CGSizeMake(self.tableView.frame.size.width-20, 200);
         CGSize expectedSize = [self.tweet.text sizeWithFont:[UIFont systemFontOfSize:14] constrainedToSize:maximumSize
                                               lineBreakMode:NSLineBreakByWordWrapping];
@@ -95,24 +118,50 @@
         return expectedSize.height;
     }
     
-    return 200;
+    return 160;
 }
 
 - (UITableViewCell *)tableView:(UITableView *)tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath {
     UITableViewCell *cell = [tableView dequeueReusableCellWithIdentifier:@"TweetVC Cell"];
     
     if (indexPath.row == 0) {
+        // adding background image view
+        self.backgroundImageView.frame = CGRectMake(0, 0, cell.frame.size.width, 120);
+        [self downloadImageForView:self.backgroundImageView withURL:self.backgroundImageURL];
+        self.backgroundImageView.center = CGPointMake(cell.frame.size.width/2, 120/2);
+        [cell.contentView addSubview:self.backgroundImageView];
+        [cell setNeedsDisplay];
+        [cell setNeedsLayout];
+        
+        // adding profile image view
+        self.profileImageView.frame = CGRectMake(0, 0, cell.frame.size.width/6, cell.frame.size.width/6);
+        [self downloadImageForView:self.profileImageView withURL:self.profileImageURL];
+        self.profileImageView.center = CGPointMake(cell.frame.size.width/6, 120/2);
+        self.profileImageView.layer.cornerRadius = cell.frame.size.width/12;
+        [cell.contentView addSubview:self.profileImageView];
+        
+        cell.textLabel.text = nil;
+    }
+    
+    if (indexPath.row == 1) {
+        cell.textLabel.text = self.username;
+        cell.textLabel.font = [UIFont boldSystemFontOfSize:14];
+        cell.textLabel.textAlignment = NSTextAlignmentCenter;
+        cell.textLabel.textColor = [UIColor whiteColor];
+    }
+    
+    if (indexPath.row == 2) {
         cell.textLabel.text = self.tweet.text;
         cell.textLabel.font = [UIFont systemFontOfSize:14];
         cell.textLabel.numberOfLines = 99;
     }
     
-    if (indexPath.row == 1) {        
+    if (indexPath.row == 3) {
         cell.textLabel.text = nil;
         [cell.contentView addSubview:self.collectionView];
         [self.collectionView reloadData];
     }
-
+    
     return cell;
 }
 
@@ -122,13 +171,15 @@
         [flowLayout setItemSize:CGSizeMake(80, 80)];
         [flowLayout setScrollDirection:UICollectionViewScrollDirectionVertical];
         [flowLayout setSectionInset:UIEdgeInsetsMake(10, 10, 10, 10)];
-        _collectionView = [[UICollectionView alloc] initWithFrame:CGRectMake(0, 0, self.tableView.frame.size.width-20, 160)
+        _collectionView = [[UICollectionView alloc] initWithFrame:CGRectMake(0, 0, self.tableView.frame.size.width, 160)
                                              collectionViewLayout:flowLayout];
         _collectionView.backgroundColor = [UIColor clearColor];
         _collectionView.delegate = self;
         _collectionView.dataSource = self;
         [_collectionView registerClass:[UICollectionViewCell class] forCellWithReuseIdentifier:@"Image Collection Cell"];
     }
+    
+    _collectionView.frame = CGRectMake(0, 0, self.tableView.frame.size.width, 160);
     
     return _collectionView;
 }
@@ -149,19 +200,19 @@
     Media *media = [[self.tweet.allMedia allObjects] objectAtIndex:indexPath.row];
     NSURL *thumbnailURL = [NSURL URLWithString:media.thumbnailURL];
     
-    UIActivityIndicatorView *spinner = [[UIActivityIndicatorView alloc] initWithActivityIndicatorStyle:UIActivityIndicatorViewStyleWhite];
-    spinner.hidesWhenStopped = YES;
-    [spinner startAnimating];
-    spinner.center = CGPointMake(cell.frame.size.width/2, cell.frame.size.height/2);
     cell.contentView.layer.borderWidth = 1;
     cell.contentView.layer.borderColor = [UIColor whiteColor].CGColor;
-    [cell.contentView addSubview:spinner];
     
-    dispatch_queue_t collectionQueue = dispatch_queue_create("image_collection_fetch_queue", NULL);
-    dispatch_async(collectionQueue, ^{
+    UIActivityIndicatorView *spinner = [[UIActivityIndicatorView alloc] initWithActivityIndicatorStyle:UIActivityIndicatorViewStyleWhite];
+    spinner.center = CGPointMake(cell.frame.size.width/2, cell.frame.size.width/2);
+    spinner.hidesWhenStopped = YES;
+    [spinner startAnimating];
+    dispatch_queue_t mediaDownloadQueue = dispatch_queue_create("media_download_queue", NULL);
+    dispatch_async(mediaDownloadQueue, ^{
         UIImage *image = [UIImage imageWithData:[NSData dataWithContentsOfURL:thumbnailURL]];
         dispatch_async(dispatch_get_main_queue(), ^{
             UIImageView *imageView = [[UIImageView alloc] initWithImage:image];
+            imageView.image = image;
             imageView.frame = cell.contentView.frame;
             [spinner stopAnimating];
             [cell.contentView addSubview:imageView];
@@ -182,7 +233,6 @@
 }
 
 - (void)collectionView:(UICollectionView *)collectionView didSelectItemAtIndexPath:(NSIndexPath *)indexPath {
-    
     Media *media = [[[self.tweet allMedia] allObjects] objectAtIndex:indexPath.row];
     NSURL *imageURL = [NSURL URLWithString:media.largeImageURL];
     UIStoryboard *storyboard = [UIStoryboard storyboardWithName:@"MainStoryboard" bundle:nil];
